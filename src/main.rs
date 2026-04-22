@@ -138,6 +138,22 @@ fn main() {
         run_module("VS Code", |c| modules::vscode::run(c), &cfg, &mut state);
     }
 
+    if cfg.modules.nix {
+        run_module("Nix", |c| modules::nix::run(c), &cfg, &mut state);
+    }
+
+    if cfg.modules.nodejs {
+        run_module("Node.js", |c| modules::nodejs::run(c), &cfg, &mut state);
+    }
+
+    if cfg.modules.python {
+        run_module("Python", |c| modules::python::run(c), &cfg, &mut state);
+    }
+
+    if cfg.modules.rust {
+        run_module("Rust", |c| modules::rust::run(c), &cfg, &mut state);
+    }
+
     if cfg.modules.firmware {
         state.total += 1;
         section("Firmware");

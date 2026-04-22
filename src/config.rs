@@ -72,6 +72,22 @@ struct Cli {
     #[arg(long)]
     vscode: bool,
 
+    /// Update Nix packages (nix profile, nix-env, home-manager, nixos-rebuild)
+    #[arg(long)]
+    nix: bool,
+
+    /// Update Node.js global packages (npm, pnpm, yarn, bun)
+    #[arg(long)]
+    nodejs: bool,
+
+    /// Update Python packages (pipx, uv, pip)
+    #[arg(long)]
+    python: bool,
+
+    /// Update Rust toolchain and cargo-installed binaries (rustup, cargo-update)
+    #[arg(long)]
+    rust: bool,
+
     /// Roll back rpm-ostree deployment
     #[arg(long)]
     rollback: bool,
@@ -158,6 +174,10 @@ pub struct Modules {
     pub zypper:     bool,
     pub zbox:       bool,
     pub vscode:     bool,
+    pub nix:        bool,
+    pub nodejs:     bool,
+    pub python:     bool,
+    pub rust:       bool,
 }
 
 impl Modules {
@@ -165,7 +185,8 @@ impl Modules {
         self.rpm_ostree || self.flatpak  || self.brew     || self.distrobox
             || self.podman  || self.firmware || self.bootc    || self.apt
             || self.dnf     || self.pacman   || self.zypper   || self.zbox
-            || self.vscode
+            || self.vscode  || self.nix      || self.nodejs   || self.python
+            || self.rust
     }
 
     /// Enable all standard modules (mirrors `--all`).
@@ -182,6 +203,10 @@ impl Modules {
         self.zypper     = true;
         self.zbox       = true;
         self.vscode     = true;
+        self.nix        = true;
+        self.nodejs     = true;
+        self.python     = true;
+        self.rust       = true;
         // bootc intentionally excluded from --all
     }
 
@@ -201,6 +226,12 @@ impl Modules {
         if command_exists("zypper")     { self.zypper     = true; }
         if command_exists("zbox")       { self.zbox       = true; }
         if command_exists("code") || command_exists("codium") { self.vscode = true; }
+        if command_exists("nix") || command_exists("nix-env") { self.nix    = true; }
+        if command_exists("npm") || command_exists("pnpm")
+            || command_exists("yarn") || command_exists("bun") { self.nodejs = true; }
+        if command_exists("pipx") || command_exists("uv")
+            || command_exists("pip3") || command_exists("pip") { self.python = true; }
+        if command_exists("rustup") || command_exists("cargo") { self.rust   = true; }
         // bootc intentionally excluded from autodetect
     }
 
@@ -241,6 +272,10 @@ impl Modules {
                 "zypper"                    => self.zypper     = true,
                 "zbox"                      => self.zbox       = true,
                 "vscode"                    => self.vscode     = true,
+                "nix"                       => self.nix        = true,
+                "nodejs" | "node"           => self.nodejs     = true,
+                "python" | "pip"            => self.python     = true,
+                "rust" | "cargo"            => self.rust       = true,
                 _ => {}
             }
         }
@@ -328,6 +363,10 @@ pub fn parse_args() -> Result<Config, ParseError> {
     if cli.zypper     { cfg.modules.zypper     = true; }
     if cli.zbox       { cfg.modules.zbox       = true; }
     if cli.vscode     { cfg.modules.vscode     = true; }
+    if cli.nix        { cfg.modules.nix        = true; }
+    if cli.nodejs     { cfg.modules.nodejs     = true; }
+    if cli.python     { cfg.modules.python     = true; }
+    if cli.rust       { cfg.modules.rust       = true; }
 
     cfg.rollback        = cli.rollback;
     cfg.auto_updates    = cli.auto_updates;
