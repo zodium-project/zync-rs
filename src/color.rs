@@ -53,19 +53,5 @@ pub fn status_debug()   -> String { _GREY.apply("  ·") }
 
 /// Strip ANSI escape sequences from a string (for log-file output).
 pub fn strip_ansi(s: &str) -> String {
-    let mut out = String::with_capacity(s.len());
-    let mut chars = s.chars().peekable();
-    while let Some(ch) = chars.next() {
-        if ch == '\x1b' {
-            if chars.peek() == Some(&'[') {
-                chars.next();
-                for c in chars.by_ref() {
-                    if c.is_ascii_alphabetic() { break; }
-                }
-            }
-        } else {
-            out.push(ch);
-        }
-    }
-    out
+    strip_ansi_escapes::strip_str(s)
 }

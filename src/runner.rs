@@ -152,15 +152,7 @@ pub fn run_cmd_output(args: &[&str], cfg: &Config) -> Result<String, String> {
 }
 
 pub fn command_exists(name: &str) -> bool {
-    if let Ok(path_var) = std::env::var("PATH") {
-        for dir in path_var.split(':') {
-            if dir.is_empty() { continue; }
-            if std::path::Path::new(dir).join(name).is_file() {
-                return true;
-            }
-        }
-    }
-    false
+    which::which(name).is_ok()
 }
 
 /// Run `func` as a named module: open box, run, close box, update state.

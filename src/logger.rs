@@ -7,6 +7,8 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
+use chrono;
+
 use crate::color::{
     strip_ansi, status_debug, status_failed, status_info, status_warning,
 };
@@ -107,36 +109,5 @@ pub fn warning(msg: &str) { log(msg, Level::Warning); }
 pub fn debug(msg: &str)   { log(msg, Level::Debug); }
 
 fn current_timestamp() -> String {
-    // No external crate: read from /proc/driver/rtc or use a simple approach.
-    // We shell out to `date` only once per call — this is log overhead, acceptable.
-    // Actually: use std::time and manual formatting to stay dep-free.
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    format_unix_time(secs)
-}
-
-/// Format a Unix timestamp as "YYYY-MM-DD HH:MM:SS" without any crate.
-fn format_unix_time(secs: u64) -> String {
-    // Days since epoch → date via Gregorian calendar algorithm.
-    let s = secs % 60;
-    let m = (secs / 60) % 60;
-    let h = (secs / 3600) % 24;
-    let days = secs / 86400;
-
-    // Civil date from days since 1970-01-01 (Euclidean algorithm).
-    let z = days as i64 + 719468;
-    let era = z.div_euclid(146097);
-    let doe = z.rem_euclid(146097) as u64;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-    let y = yoe as i64 + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let mo = if mp < 10 { mp + 3 } else { mp - 9 };
-    let y = if mo <= 2 { y + 1 } else { y };
-
-    format!("{y:04}-{mo:02}-{d:02} {h:02}:{m:02}:{s:02}")
+    chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string()
 }
