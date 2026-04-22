@@ -4,6 +4,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Mutex, OnceLock};
 
 use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
+use unicode_width::UnicodeWidthStr;
 
 use crate::color::{
     BOLD, DIM, RESET,
@@ -36,17 +37,7 @@ pub fn reset_box_width() {
 // ── ANSI-aware helpers ────────────────────────────────────────────────────
 
 pub fn vlen(s: &str) -> usize {
-    let mut n = 0;
-    let mut esc = false;
-    for c in s.chars() {
-        match c {
-            '\x1b'     => esc = true,
-            'm' if esc => esc = false,
-            _ if esc   => {}
-            _          => n += 1,
-        }
-    }
-    n
+    strip_ansi_escapes::strip_str(s).as_str().width()
 }
 
 fn rpad(s: &str, width: usize) -> String {
@@ -76,8 +67,9 @@ fn box_bot() -> String {
 
 fn box_row(content: &str) -> String {
     let body = if vlen(content) > w() - 2 {
+        let limit = w() - 5;
         let mut out = String::new();
-        let mut count = 0;
+        let mut cols = 0usize;
         let mut esc = false;
         for c in content.chars() {
             match c {
@@ -85,9 +77,10 @@ fn box_row(content: &str) -> String {
                 'm' if esc => { esc = false; out.push(c); }
                 _ if esc   => { out.push(c); }
                 _ => {
-                    if count >= w() - 5 { break; }
+                    let cw = unicode_width::UnicodeWidthChar::width(c).unwrap_or(0);
+                    if cols + cw > limit { break; }
                     out.push(c);
-                    count += 1;
+                    cols += cw;
                 }
             }
         }
